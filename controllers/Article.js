@@ -77,9 +77,34 @@ const create = async (req, res) => {
     }
 }
 
+const findArticle = async (req, res) => {
+    try {
+        const articulos = await Article.find({}).exec();
+
+        if (!articulos || articulos.length === 0) {
+            return res.status(404).json({
+                status: "error",
+                message: "No articles were found",
+            });
+        }
+
+        return res.status(200).send({
+            status: "success",
+            articulos
+        });
+    } catch (error) {
+        return res.status(500).json({
+            status: "error",
+            message: "An error occurred while fetching articles",
+        });
+    }
+}
+
+
 
 module.exports = {
     test,
     dataTest,
-    create
+    create, 
+    findArticle
 }

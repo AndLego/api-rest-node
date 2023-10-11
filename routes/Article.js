@@ -11,5 +11,6 @@ router.get("/test-data", ArticleController.dataTest)
 
 //util routes
 router.post("/create", ArticleController.create)
+router.get("/find", ArticleController.findArticle)
 
 module.exports = router

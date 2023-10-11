@@ -1,4 +1,5 @@
 const validator = require("validator")
+const Article = require("../models/Article")
 
 const test = (req, res) => {
     return res.status(200).json({
@@ -21,12 +22,12 @@ const dataTest = (req, res) => {
     ])
 }
 
-const create = (req, res) => {
+const create = async (req, res) => {
 
-    //take data per post
+    //TAKE data per post
     let params = req.body
 
-    //validate data
+    //VALIDATE data
     /**we use the package validator to validate the data
      * as this method can give errors we use try/catch
      */
@@ -48,15 +49,32 @@ const create = (req, res) => {
     }
 
 
-    //asign values to the object model
+    //ASIGN values to the object model -- manual or automatic
+    //this is the automatic way-and the params are set automatic
+    const article = new Article(params)
 
-    //return result
+    /**manual is nor escalable because if we send 50 params you will have to do this 1 by 1 */
+    //article.title = params.title
+    //article.title = params.title
+    //article.title = params.title
+    //article.title = params.title
 
+    //SAVE  the areticle in the db
 
-    return res.status(200).json({
-        message: "new article created",
-        params
-    })
+    try {
+        // SAVE the article in the database
+        const articleSaved = await article.save();
+        return res.status(200).json({
+            status: "success",
+            article: articleSaved,
+            message: "Article was saved"
+        });
+    } catch (error) {
+        return res.status(400).json({
+            status: "error",
+            message: "The article was NOT saved",
+        });
+    }
 }
 
 

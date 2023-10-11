@@ -20,4 +20,4 @@ const ArticleSchema = Schema({
 })
 
 //export with 3 params; name to export, item to export, (opt:) the collection on the db
-model.exports = model("Article", ArticleSchema, articles)
+module.exports = model("Article", ArticleSchema, "articles")

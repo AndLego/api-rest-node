@@ -14,4 +14,5 @@ router.post("/create", ArticleController.create)
 router.get("/articles/:last?", ArticleController.findArticles)
 ///:last? gives the option to send an optional parameter for filtering goals
 router.get("/article/:id", ArticleController.findOneArticle)
+router.delete("/article/:id", ArticleController.deleteArticle)
 module.exports = router

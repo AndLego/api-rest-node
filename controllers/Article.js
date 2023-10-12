@@ -146,11 +146,45 @@ const findOneArticle = async (req, res) => {
 
 }
 
+const deleteArticle = async (req, res) => {
+    try {
+
+        //get and Id 
+        let userId = req.params.id
+
+        //find and delete by id the article
+        let query = await Article.findOneAndDelete({ _id: userId }).exec()
+
+        //return error in case it doesnt exist
+        if (!query || query.length === 0) {
+            return res.status(404).json({
+                status: "error",
+                message: "We couldnt delete your article"
+            })
+        }
+
+        //return success message
+
+        return res.status(200).json({
+            status: "success",
+            article: query,
+            message: "deleted bro..."
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            status: "error",
+            message: "An error occurred while deleting the article",
+        });
+    }
+}
+
 
 module.exports = {
     test,
     dataTest,
     create,
     findArticles,
-    findOneArticle
+    findOneArticle,
+    deleteArticle
 }

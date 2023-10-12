@@ -77,9 +77,19 @@ const create = async (req, res) => {
     }
 }
 
-const findArticle = async (req, res) => {
+const findArticles = async (req, res) => {
     try {
-        const articulos = await Article.find({}).exec();
+
+        let query = Article
+            .find({})
+            .sort({ date: -1 }); //sort by newer post
+
+        if (req.params.last) {
+            query.limit(3); // Limit the number of objects shown
+            //in this case if there's a /find/something , it will limit the res
+        }
+
+        const articulos = await query.exec();
 
         if (!articulos || articulos.length === 0) {
             return res.status(404).json({
@@ -90,8 +100,11 @@ const findArticle = async (req, res) => {
 
         return res.status(200).send({
             status: "success",
+            parameter_url: req.params.last,
+            articles: articulos.length,
             articulos
         });
+
     } catch (error) {
         return res.status(500).json({
             status: "error",
@@ -100,11 +113,44 @@ const findArticle = async (req, res) => {
     }
 }
 
+const findOneArticle = async (req, res) => {
+
+    try {
+        //get an ID by url
+        let id = req.params.id
+
+        //find the article with the ID
+        let query = await Article.findById(id).exec()
+
+        //if it doesnt exist return error
+        if (!query || query.length === 0) {
+            return res.status(404).json({
+                status: "error",
+                message: "No articles were found",
+            });
+        }
+
+        //return the article
+
+        return res.status(200).json({
+            status: "success",
+            query
+        })
+
+    } catch (error) {
+        return res.status(500).json({
+            status: "error",
+            message: "An error occurred while fetching the article",
+        });
+    }
+
+}
 
 
 module.exports = {
     test,
     dataTest,
-    create, 
-    findArticle
+    create,
+    findArticles,
+    findOneArticle
 }

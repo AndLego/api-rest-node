@@ -150,10 +150,10 @@ const deleteArticle = async (req, res) => {
     try {
 
         //get and Id 
-        let userId = req.params.id
+        let article_id = req.params.id
 
         //find and delete by id the article
-        let query = await Article.findOneAndDelete({ _id: userId }).exec()
+        let query = await Article.findOneAndDelete({ _id: article_id }).exec()
 
         //return error in case it doesnt exist
         if (!query || query.length === 0) {
@@ -179,6 +179,50 @@ const deleteArticle = async (req, res) => {
     }
 }
 
+const updateArticle = async(req, res) => {
+    try {
+        const article_id = req.params.id;
+        const parameters = req.body;
+
+        // Validar los datos
+        if (
+            !validator.isEmpty(parameters.title) &&
+            validator.isLength(parameters.title, { min: 5, max: undefined }) &&
+            !validator.isEmpty(parameters.content)
+        ) {
+            const updatedArticle = await Article.findOneAndUpdate(
+                { _id: article_id },
+                parameters,
+                { new: true } //we can return the new object updated
+            ).exec();
+
+            if (!updatedArticle) {
+                return res.status(404).json({
+                    status: "error",
+                    message: "Article not found or couldn't be updated",
+                });
+            }
+
+            return res.status(200).json({
+                status: "success",
+                article: updatedArticle,
+            });
+            
+        } else {
+            return res.status(400).json({
+                status: "error",
+                message: "Wrong parameters or data validation failed",
+            });
+        }
+    } catch (error) {
+        return res.status(500).json({
+            status: "error",
+            message: "An error occurred while updating the article",
+        });
+    }
+
+}
+
 
 module.exports = {
     test,
@@ -186,5 +230,6 @@ module.exports = {
     create,
     findArticles,
     findOneArticle,
-    deleteArticle
+    deleteArticle,
+    updateArticle
 }

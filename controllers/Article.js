@@ -1,5 +1,5 @@
-const validator = require("validator")
 const Article = require("../models/Article")
+const { articleValidator } = require("../helpers/validator")
 
 const test = (req, res) => {
     return res.status(200).json({
@@ -33,7 +33,6 @@ const create = async (req, res) => {
      */
 
     try {
-
         let title = !validator.isEmpty(params.title) && validator.isLength(params.title, { min: 5, max: undefined })
         let content = !validator.isEmpty(params.content)
 
@@ -42,6 +41,7 @@ const create = async (req, res) => {
         }
 
     } catch (err) {
+        console.log(err)
         return res.status(400).json({
             status: "error",
             message: "wrong parameters",
@@ -53,13 +53,15 @@ const create = async (req, res) => {
     //this is the automatic way-and the params are set automatic
     const article = new Article(params)
 
-    /**manual is nor escalable because if we send 50 params you will have to do this 1 by 1 */
-    //article.title = params.title
-    //article.title = params.title
-    //article.title = params.title
-    //article.title = params.title
+    /**manual is not escalable because if we send 50 params you will have to do this 1 by 1 
+     * 
+    article.title = params.title
+    article.content = params.content
+    article.title = params.title
+    article.title = params.title
+    */
 
-    //SAVE  the areticle in the db
+    //SAVE  the article in the db
 
     try {
         // SAVE the article in the database
@@ -179,50 +181,43 @@ const deleteArticle = async (req, res) => {
     }
 }
 
-const updateArticle = async(req, res) => {
+const updateArticle = async (req, res) => {
     try {
         const article_id = req.params.id;
-        const parameters = req.body;
+        const params = req.body;
 
         // Validar los datos
-        if (
-            !validator.isEmpty(parameters.title) &&
-            validator.isLength(parameters.title, { min: 5, max: undefined }) &&
-            !validator.isEmpty(parameters.content)
-        ) {
-            const updatedArticle = await Article.findOneAndUpdate(
-                { _id: article_id },
-                parameters,
-                { new: true } //we can return the new object updated
-            ).exec();
-
-            if (!updatedArticle) {
-                return res.status(404).json({
-                    status: "error",
-                    message: "Article not found or couldn't be updated",
-                });
-            }
-
-            return res.status(200).json({
-                status: "success",
-                article: updatedArticle,
-            });
-            
-        } else {
+        try {
+            articleValidator(params)
+        } catch (error) {
             return res.status(400).json({
                 status: "error",
-                message: "Wrong parameters or data validation failed",
-            });
+                message: "wrong or missing parameters",
+            })
         }
+
+        const updatedArticle = await Article.findOneAndUpdate(
+            { _id: article_id },
+            params,
+            { new: true } //we can return the new object updated
+        ).exec();
+
+        if (!updatedArticle) {
+            throw new Error("Article not found or couldn't be updated")
+        }
+
+        res.status(200).json({
+            status: "success",
+            article: updatedArticle,
+        });
+
     } catch (error) {
-        return res.status(500).json({
+        res.status(500).json({
             status: "error",
             message: "An error occurred while updating the article",
         });
     }
-
 }
-
 
 module.exports = {
     test,

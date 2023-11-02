@@ -1,3 +1,4 @@
+const fs = require("fs")
 const Article = require("../models/Article")
 const { articleValidator } = require("../helpers/validator")
 
@@ -33,13 +34,7 @@ const create = async (req, res) => {
      */
 
     try {
-        let title = !validator.isEmpty(params.title) && validator.isLength(params.title, { min: 5, max: undefined })
-        let content = !validator.isEmpty(params.content)
-
-        if (!title || !content) {
-            throw new Error("we couldnt validate the data")
-        }
-
+        articleValidator(params)
     } catch (err) {
         console.log(err)
         return res.status(400).json({
@@ -219,6 +214,51 @@ const updateArticle = async (req, res) => {
     }
 }
 
+const uploadImage = (req, res) => {
+    //setting multer => done in routes/Article.js
+
+    //pick the image uploaded
+    if (!req.file && !req.files) {
+        return res.status(404).json({
+            status: "error",
+            message: "wrong petition"
+        });
+    }
+    //name the file
+
+    let fileName = req.file.originalname
+
+    //extension of the file
+
+    let fileSplit = fileName.split("\.")
+    let fileExt = fileSplit[fileSplit.length - 1]
+
+    //validate file extension
+
+    if (fileExt != "png" && fileExt != "jpg" &&
+        fileExt != "jpeg" && fileExt != "gif") {
+        //delete the file and return res
+        fs.unlink(req.file.path, (error) => {
+            return res.status(400).json({
+                status: "error",
+                message: "not valid image"
+            })
+        })
+    } else {
+        //update
+
+        //return res
+
+        return res.status(200).json({
+            status: "success",
+            fileExt,
+            files: req.file
+        });
+    }
+
+
+}
+
 module.exports = {
     test,
     dataTest,
@@ -226,5 +266,6 @@ module.exports = {
     findArticles,
     findOneArticle,
     deleteArticle,
-    updateArticle
+    updateArticle,
+    uploadImage
 }

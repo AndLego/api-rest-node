@@ -1,9 +1,24 @@
 const express = require("express")
+const multer = require("multer")
+
 const router = express.Router()
 
-//we load the controllerand then use it on the route
+const storage = multer.diskStorage({
+    //cb is like a hook that let us save or modify the file
+    destination: (req, file, cb) => {
+        cb(null, "./images/articles")
+    },
+    filename: (req, file, cb) => {
+        cb(null, `article ${Date.now()} ${file.originalname}`)
+    }
+})
 
+//middleware to upload using multer(personal)
+const upload = multer({ storage: storage })
+
+//we load the controller and then use it on the route
 const ArticleController = require("../controllers/Article")
+
 
 //test routes
 router.get("/test-article", ArticleController.test)
@@ -16,5 +31,6 @@ router.get("/articles/:last?", ArticleController.findArticles)
 router.get("/article/:id", ArticleController.findOneArticle)
 router.delete("/article/:id", ArticleController.deleteArticle)
 router.put("/article/:id", ArticleController.updateArticle)
+router.post("/uploadImage/:id", [upload.single("file0")], ArticleController.uploadImage)
 
 module.exports = router

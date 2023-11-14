@@ -9,7 +9,7 @@ const storage = multer.diskStorage({
         cb(null, "./images/articles")
     },
     filename: (req, file, cb) => {
-        cb(null, `article ${Date.now()} ${file.originalname}`)
+        cb(null, `article${Date.now()}${file.originalname}`)
     }
 })
 
@@ -32,5 +32,8 @@ router.get("/article/:id", ArticleController.findOneArticle)
 router.delete("/article/:id", ArticleController.deleteArticle)
 router.put("/article/:id", ArticleController.updateArticle)
 router.post("/uploadImage/:id", [upload.single("file0")], ArticleController.uploadImage)
+router.get("/image/:fichero", ArticleController.getImage)
+router.get("/getQuery/:query", ArticleController.getQuery)
+
 
 module.exports = router

@@ -1,4 +1,5 @@
 const fs = require("fs")
+const path = require("path")
 const Article = require("../models/Article")
 const { articleValidator } = require("../helpers/validator")
 
@@ -214,7 +215,7 @@ const updateArticle = async (req, res) => {
     }
 }
 
-const uploadImage = (req, res) => {
+const uploadImage = async (req, res) => {
     //setting multer => done in routes/Article.js
 
     //pick the image uploaded
@@ -245,14 +246,91 @@ const uploadImage = (req, res) => {
             })
         })
     } else {
-        //update
+        try {
+            const article_id = req.params.id;
 
-        //return res
+            const updatedArticle = await Article.findOneAndUpdate(
+                { _id: article_id },
+                { image: req.file.filename },
+                { new: true } //we can return the new object updated
+            ).exec();
 
+            if (!updatedArticle) {
+                throw new Error("Article not found or couldn't be updated")
+            }
+
+            res.status(200).json({
+                status: "success",
+                article: updatedArticle,
+                fichero: req.file
+            });
+
+        } catch (error) {
+            res.status(500).json({
+                status: "error",
+                message: "An error occurred while updating the article",
+            });
+        }
+    }
+}
+
+const getImage = (req, res) => {
+    let fichero = req.params.fichero
+    //location of the saved files
+    let route = `./images/articles/${fichero}`
+
+    console.log(route)
+
+    fs.stat(route, (error, exist) => {
+        if (exist) {
+            return res.sendFile(path.resolve(route))
+        } else {
+            res.status(404).json({
+                status: "error",
+                message: "Image dont exist",
+                exist,
+                fichero,
+                route
+            });
+        }
+    })
+}
+
+const getQuery = async (req, res) => {
+    try {
+        //take the string to query
+        let query = req.params.query
+
+        //find OR
+        /**using regular expression we can search if the query is "i" included
+         * in the title, content, etc
+         */
+        const queryResults = await Article.find({
+            "$or": [
+                { "title": { "$regex": query, "$options": "i" } },
+                { "content": { "$regex": query, "$options": "i" } },
+            ]
+        })
+            .sort({ date: -1 })
+            .exec()
+        // ^ Organize results new to older ^ and execute
+
+        if (queryResults <= 0) {
+            return res.status(404).json({
+                status: "error",
+                message: "no matching result"
+            })
+        }
+
+        //return results
         return res.status(200).json({
             status: "success",
-            fileExt,
-            files: req.file
+            query: queryResults
+        })
+    } catch (error) {
+        return res.status(500).json({
+            status: "error",
+            message: "An error occurred while fetching the query"
         });
     }
 
@@ -267,5 +345,7 @@ module.exports = {
     findOneArticle,
     deleteArticle,
     updateArticle,
-    uploadImage
+    uploadImage,
+    getImage,
+    getQuery
 }
